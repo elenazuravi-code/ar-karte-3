@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AR-Test – Illustration 3</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #status { position: fixed; z-index: 1000; top: 12px; left: 12px; right: 12px; padding: 12px; border-radius: 9px; background: rgba(0,0,0,.72); color: white; font: 16px Arial,sans-serif; text-align: center; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="status">Kamera starten und Illustration 3 ins Bild halten …</div>
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" color-space="sRGB" renderer="colorManagement: true;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
+    <a-assets></a-assets>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-circle radius="0.22" color="#00FF55" opacity="0.95" position="0 0 0.02" material="shader: flat; side: double"></a-circle>
+    </a-entity>
+  </a-scene>
+  <script>
+    const status = document.getElementById('status');
+    document.querySelector('#target').addEventListener('targetFound', () => { status.textContent = '✓ Illustration erkannt!'; status.style.background = 'rgba(0,120,40,.85)'; });
+    document.querySelector('#target').addEventListener('targetLost', () => { status.textContent = 'Illustration nicht im Bild – erneut ausrichten'; status.style.background = 'rgba(0,0,0,.72)'; });
+    document.querySelector('a-scene').addEventListener('arError', () => { status.textContent = 'Kamera-/AR-Fehler: Berechtigung und HTTPS prüfen'; });
+  </script>
+</body>
+</html>
