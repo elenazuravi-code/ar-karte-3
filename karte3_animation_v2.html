@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Papa Tom – AR Karte 3</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #status { position: fixed; z-index: 1000; top: 12px; left: 12px; right: 12px; padding: 12px; border-radius: 9px; background: rgba(0,0,0,.72); color: white; font: 16px Arial,sans-serif; text-align: center; pointer-events: none; }
+    #play { position: fixed; z-index: 1001; bottom: 24px; left: 50%; transform: translateX(-50%); border: 0; border-radius: 24px; padding: 12px 18px; font: 16px Arial,sans-serif; background: white; color: black; }
+    #play[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div id="status">Kamera starten und Illustration 3 ins Bild halten …</div>
+  <button id="play" hidden>Animation starten</button>
+  <!-- Outside a-assets so video loading cannot block A-Frame scene initialization. -->
+  <video id="animation3" src="./animation3.mp4" preload="metadata" loop muted playsinline webkit-playsinline crossorigin="anonymous" style="display:none"></video>
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" color-space="sRGB" renderer="colorManagement: true;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
+    <a-assets></a-assets>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-video id="overlay" src="#animation3" width="1" height="1.4145" position="0 0 0.02" visible="false" material="shader: flat; side: double"></a-video>
+    </a-entity>
+  </a-scene>
+  <script>
+    const status = document.getElementById('status');
+    const video = document.getElementById('animation3');
+    const target = document.getElementById('target');
+    const overlay = document.getElementById('overlay');
+    const playButton = document.getElementById('play');
+    let found = false;
+    let attempt = 0;
+
+    async function playVideo() {
+      const thisAttempt = ++attempt;
+      if (!found) return;
+      try {
+        await video.play();
+        if (!found || thisAttempt !== attempt) { video.pause(); return; }
+        overlay.setAttribute('visible', true);
+        playButton.hidden = true;
+        status.textContent = '✓ Illustration erkannt!';
+        status.style.background = 'rgba(0,120,40,.85)';
+      } catch (err) {
+        if (!found || thisAttempt !== attempt) return;
+        status.textContent = '✓ Illustration erkannt – Animation bitte starten';
+        playButton.hidden = false;
+      }
+    }
+
+    target.addEventListener('targetFound', () => {
+      found = true;
+      status.textContent = '✓ Illustration erkannt!';
+      status.style.background = 'rgba(0,120,40,.85)';
+      video.currentTime = 0;
+      playVideo();
+    });
+    target.addEventListener('targetLost', () => {
+      found = false;
+      ++attempt;
+      video.pause();
+      video.currentTime = 0;
+      overlay.setAttribute('visible', false);
+      playButton.hidden = true;
+      status.textContent = 'Illustration nicht im Bild – erneut ausrichten';
+      status.style.background = 'rgba(0,0,0,.72)';
+    });
+    playButton.addEventListener('click', playVideo);
+    video.addEventListener('error', () => {
+      status.textContent = 'Video konnte nicht geladen werden – Dateiname animation3.mp4 prüfen';
+    });
+    document.querySelector('a-scene').addEventListener('arError', () => {
+      status.textContent = 'Kamera-/AR-Fehler: Berechtigung und HTTPS prüfen';
+    });
+  </script>
+</body>
+</html>
